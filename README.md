@@ -8,7 +8,7 @@ FDTC (Flattened Device Tree Compiler) is a tree data structure specifically desi
 
 ## Quick Start
 ### 1. Compiling the Device Tree
-1. Download the [fdtc.exe](https://gitee.com/li-shan-asked/fdt/releases) compiler to your local machine, then operate via command line.
+1. Download the [fdtc.exe](https://github.com/LiShanwenGit/fdt/releases/tag/fdtc-250105) compiler to your local machine, then operate via command line.
 2. Compile the device tree to generate a dtb file, for example:
 ```shell
 ./fdtc.exe test.dts -o test.dtb
