@@ -31,6 +31,33 @@
 
 
 /**
+ * you should replace the log function with your own.
+ */
+#ifdef x86_64
+#define FDT_LOG(...)                printf(__VA_ARGS__)
+#define FDT_LOG_ERROR(...)          printf("[ERROR]"__VA_ARGS__)
+#define FDT_LOG_INFO(...)           printf("[INFO]"__VA_ARGS__)
+#else
+#define FDT_LOG(...)
+#define FDT_LOG_ERROR(...)
+#define FDT_LOG_INFO(...)
+#endif
+
+
+/**
+ * you should replace the memory function with your own.
+ */
+#define  fdt_malloc(size)           malloc(size)
+#define  fdt_free(ptr)              free(ptr)
+
+#define  fdt_strcmp(a, b)           strcmp(a, b)
+#define  fdt_strlen(s)              strlen(s)
+
+#define  fdt_memset(buf, val, len)  memset(buf, val, len)
+#define  fdt_memcpy(dst, src, len)  memcpy(dst, src, len)
+
+
+/**
  * @prev: previous node of the list.
  * @next: next node of the list.
  */
@@ -46,6 +73,7 @@ typedef struct fdt_list_node {
  * @FDT_PROP_STRING : string type.
  * @FDT_PROP_INT    : integer type.
  * @FDT_PROP_ARRAY  : array type.
+ * @FDT_PROP_INVALID: invalid value
  */
 typedef enum {
     FDT_PROP_STRING = 0, // string offset
@@ -90,10 +118,8 @@ typedef struct fdt_node {
 
 /**
  * @brief Get the offset of internal members of the structure
- * 
  * @struct_t: structure typedef 
  * @member: member in structure
- * 
  * @return offset of member in the structure
 */
 #define  fdt_offsetof(struct_t, member)      \
@@ -102,28 +128,27 @@ typedef struct fdt_node {
 
 /**
  * @brief Get the address of the structure instance.
- *
  * @ptr: address of the structure member.
  * @type: type of the structure.
  * @member: member name of the ptr in structure.
- *   
  * @return pointer to address of structure 
  */
 #define fdt_container_of(ptr, type, member)      ({ \
                (type *)((char *)ptr - fdt_offsetof(type, member)); })
 
 
-
+/**
+ * @brief Initialize the list head.
+ * @name: list head name.
+ */
 #define FDT_LIST_HEAD(name) \
 	fdt_list_node_t name = {.prev = &(name), .next = &(name)}
 
 
 /**
  * @brief foreach the list.
- *
  * @pos: the &struct list_head to use as a loop cursor.
  * @list_head: the head for your list.
- * 
  * @return none
  */
 #define fdt_list_for_each(pos, list_head) \
@@ -132,9 +157,7 @@ typedef struct fdt_node {
 
 /**
  * @brief Return the next entry of specific node.
- *
  * @entry: specific entry.
- *
  * @return entry_type: next entry of specific entry.
  */
 #define fdt_list_next_entry(entry, entry_type, list_node_member) \
@@ -143,9 +166,7 @@ typedef struct fdt_node {
 
 /**
  * @brief Return the previous entry of specific node.
- *
  * @entry: specific entry.
- *
  * @return entry_type: previous entry of specific entry.
  */
 #define fdt_list_prev_entry(entry, entry_type, list_node_member) \
@@ -154,12 +175,10 @@ typedef struct fdt_node {
 
 /**
  * @brief foreach the list inserted in a structure.
- *
  * @pos: the &struct list_head to use as a loop cursor.
  * @list_head: the head for your list.
  * @entry_type: type of the struct.
  * @list_node_member: member name of the list_node in structure.
- *
  * @return none
  */
 #define fdt_list_for_each_entry(pos, list_head, entry_type, list_node_member) \
@@ -172,28 +191,6 @@ typedef struct fdt_node {
  * @brief FDT magic number. meaning "fdt"
  */
 #define FDT_MAGIC                   0x746466
-
-
-#ifdef x86_64
-#define FDT_LOG(...)                printf(__VA_ARGS__)
-#define FDT_LOG_ERROR(...)          printf("[ERROR]"__VA_ARGS__)
-#define FDT_LOG_INFO(...)           printf("[INFO]"__VA_ARGS__)
-#else
-#define FDT_LOG(...)
-#define FDT_LOG_ERROR(...)
-#define FDT_LOG_INFO(...)
-#endif
-
-
-#define  fdt_malloc(size)           malloc(size)
-#define  fdt_free(ptr)              free(ptr)
-
-#define  fdt_strcmp(a, b)           strcmp(a, b)
-#define  fdt_strlen(s)              strlen(s)
-
-#define  fdt_memset(buf, val, len)  memset(buf, val, len)
-#define  fdt_memcpy(dst, src, len)  memcpy(dst, src, len)
-
 
 
 #ifdef __cplusplus
@@ -348,6 +345,24 @@ int fdt_read_prop_u64(fdt_node_t *node, const char *name, uint64_t *value);
  * @return 0 if success, or -1.
  */
 int fdt_read_prop_array(fdt_node_t *node, const char *name, uint8_t index, size_t *value);
+
+
+/**
+ * @brief read array property size
+ * @param node: node
+ * @param name: property name
+ * @return int: > 0: success, -1: fail
+ */
+int fdt_read_prop_array_size(fdt_node_t *node, const char *name);
+
+
+/**
+ * @brief read array property size by path
+ * @param node_path: node path
+ * @param name: property name
+ * @return int: > 0: success, -1: fail
+ */
+int fdt_read_prop_array_size_by_path(const char *node_path, const char *name);
 
 
 /**
@@ -521,6 +536,7 @@ void fdt_debug_put_node_info(fdt_node_t *node);
  * @brief Debug to get fdt number of bytes consumed
  * @param none
  * @return uint64_t number of bytes consumed
+ * @note you should call it in debug mode
  */
 uint64_t fdt_debug_get_consume_bytes(void);
 

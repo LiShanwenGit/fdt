@@ -18,11 +18,18 @@
 
 #include "fdt.h"
 
+
 /**
  * fdt version, it is format of year-month-day
  */
 static uint64_t fdt_version = 0;
+
+
+/**
+ * fdt consume memory size, it is bytes
+ */
 static uint64_t fdt_consume = 0;
+
 
 /**
  * @brief inititialize a list.
@@ -530,6 +537,45 @@ int fdt_read_prop_array(fdt_node_t *node, const char *name, uint8_t index, size_
 
 
 /**
+ * @brief read array property size
+ * 
+ * @param node: node
+ * @param name: property name
+ * @return int: > 0: success, -1: fail
+ */
+int fdt_read_prop_array_size(fdt_node_t *node, const char *name)
+{
+    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
+    if(prop == NULL) {
+        return -1;
+    }
+
+    uint8_t *pos = (uint8_t*)prop->offset;
+    uint8_t cell_size = *pos - 32;
+
+    return *(pos + 1);
+}
+
+
+/**
+ * @brief read array property size by path
+ * 
+ * @param node_path: node path
+ * @param name: property name
+ * @return int: > 0: success, -1: fail
+ */
+int fdt_read_prop_array_size_by_path(const char *node_path, const char *name)
+{
+    fdt_node_t* node = fdt_find_node_by_path(node_path);
+    if(node == NULL) {
+        return -1;
+    }
+
+    return fdt_read_prop_array_size(node, name);
+}
+
+
+/**
  * @brief read array property for u8 type
  * 
  * @param node: node
@@ -1000,6 +1046,7 @@ void fdt_debug_put_node_info(fdt_node_t *node)
  * @brief Debug to get fdt number of bytes consumed
  * @param none
  * @return uint64_t number of bytes consumed
+ * @note only used for debug
  */
 uint64_t fdt_debug_get_consume_bytes(void)
 {
@@ -1023,7 +1070,6 @@ static uint64_t get_magic(uint8_t *token)
 
     return magic & 0xffffff;
 }
-
 
 
 /**
