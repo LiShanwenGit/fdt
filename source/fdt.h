@@ -28,6 +28,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 
 /**
@@ -118,8 +119,10 @@ typedef struct fdt_node {
 
 /**
  * @brief Get the offset of internal members of the structure
+ * 
  * @struct_t: structure typedef 
  * @member: member in structure
+ * 
  * @return offset of member in the structure
 */
 #define  fdt_offsetof(struct_t, member)      \
@@ -128,63 +131,70 @@ typedef struct fdt_node {
 
 /**
  * @brief Get the address of the structure instance.
+ *
  * @ptr: address of the structure member.
  * @type: type of the structure.
  * @member: member name of the ptr in structure.
+ *   
  * @return pointer to address of structure 
  */
 #define fdt_container_of(ptr, type, member)      ({ \
                (type *)((char *)ptr - fdt_offsetof(type, member)); })
 
 
-/**
- * @brief Initialize the list head.
- * @name: list head name.
- */
+
 #define FDT_LIST_HEAD(name) \
-	fdt_list_node_t name = {.prev = &(name), .next = &(name)}
+    fdt_list_node_t name = {.prev = &(name), .next = &(name)}
 
 
 /**
  * @brief foreach the list.
+ *
  * @pos: the &struct list_head to use as a loop cursor.
  * @list_head: the head for your list.
+ * 
  * @return none
  */
 #define fdt_list_for_each(pos, list_head) \
-	for (pos = (list_head)->next; pos != (list_head); pos = pos->next)
+    for (pos = (list_head)->next; pos != (list_head); pos = pos->next)
 
 
 /**
  * @brief Return the next entry of specific node.
+ *
  * @entry: specific entry.
+ *
  * @return entry_type: next entry of specific entry.
  */
 #define fdt_list_next_entry(entry, entry_type, list_node_member) \
-	fdt_container_of(entry->list_node_member.next, entry_type, list_node_member)
+    fdt_container_of(entry->list_node_member.next, entry_type, list_node_member)
 
 
 /**
  * @brief Return the previous entry of specific node.
+ *
  * @entry: specific entry.
+ *
  * @return entry_type: previous entry of specific entry.
  */
 #define fdt_list_prev_entry(entry, entry_type, list_node_member) \
-	fdt_container_of(entry->list_node_member.prev, entry_type, list_node_member)
+    fdt_container_of(entry->list_node_member.prev, entry_type, list_node_member)
 
 
 /**
  * @brief foreach the list inserted in a structure.
+ *
  * @pos: the &struct list_head to use as a loop cursor.
  * @list_head: the head for your list.
  * @entry_type: type of the struct.
  * @list_node_member: member name of the list_node in structure.
+ *
  * @return none
  */
 #define fdt_list_for_each_entry(pos, list_head, entry_type, list_node_member) \
-	for (pos = fdt_container_of((list_head)->next, entry_type, list_node_member); \
-	     &pos->list_node_member != (list_head); \
-	     pos = fdt_container_of(pos->list_node_member.next, entry_type, list_node_member))
+    for (pos = fdt_container_of((list_head)->next, entry_type, list_node_member); \
+            &pos->list_node_member != (list_head); \
+            pos = fdt_container_of(pos->list_node_member.next, entry_type, list_node_member))
 
 
 /**
@@ -244,12 +254,12 @@ uint64_t fdt_get_version(void);
 
 
 /**
- * @brief Find node by name.
- * @param node: node.
- * @param name: node name.
- * @return node of found node, or NULL.
+ * @brief find node by name
+ * @param parent: parent node, if the value is NULL, meaning find node from root node
+ * @param name: node name
+ * @return fdt_node_t*: node
  */
-fdt_node_t* fdt_find_node_by_name(fdt_node_t *node, const char *name);
+fdt_node_t* fdt_find_node_by_name(fdt_node_t *parent, const char *name);
 
 
 /**
@@ -297,116 +307,14 @@ int fdt_read_prop_int(fdt_node_t *node, const char *name, size_t *value);
 
 
 /**
- * @brief Read property value for u8 type.
- * @param node: node.
- * @param name: property name.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_u8(fdt_node_t *node, const char *name, uint8_t *value);
-
-
-/**
- * @brief Read property value for u16 type.
- * @param node: node.
- * @param name: property name.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_u16(fdt_node_t *node, const char *name, uint16_t *value);
-
-
-/**
- * @brief Read property value for u32 type.
- * @param node: node.
- * @param name: property name.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_u32(fdt_node_t *node, const char *name, uint32_t *value);
-
-
-/**
- * @brief Read property value for u64 type.
- * @param node: node.
- * @param name: property name.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_u64(fdt_node_t *node, const char *name, uint64_t *value);
-
-
-/**
- * @brief Read property value for integer array type.
- * @param node: node.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_array(fdt_node_t *node, const char *name, uint8_t index, size_t *value);
-
-
-/**
- * @brief read array property size
+ * @brief read int property
+ * 
  * @param node: node
  * @param name: property name
- * @return int: > 0: success, -1: fail
+ * @param value: property value
+ * @return int: 0: success, -1: fail
  */
-int fdt_read_prop_array_size(fdt_node_t *node, const char *name);
-
-
-/**
- * @brief read array property size by path
- * @param node_path: node path
- * @param name: property name
- * @return int: > 0: success, -1: fail
- */
-int fdt_read_prop_array_size_by_path(const char *node_path, const char *name);
-
-
-/**
- * @brief Read property value for u8 array type.
- * @param node: node.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_array_u8(fdt_node_t *node, const char *name, uint8_t index, uint8_t *value);
-
-
-/**
- * @brief Read property value for u16 array type.
- * @param node: node.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_array_u16(fdt_node_t *node, const char *name, uint8_t index, uint16_t *value);
-
-
-/**
- * @brief Read property value for u32 array type.
- * @param node: node.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_array_u32(fdt_node_t *node, const char *name, uint8_t index, uint32_t *value);
-
-
-/**
- * @brief Read property value for u64 array type.
- * @param node: node.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_array_u64(fdt_node_t *node, const char *name, uint8_t index, uint64_t *value);
+int fdt_read_prop_int_index(fdt_node_t *node, const char *name, uint8_t index, size_t *value);
 
 
 /**
@@ -429,98 +337,50 @@ int fdt_read_prop_int_by_path(const char *node_path, const char *name, size_t *v
 
 
 /**
- * @brief Read property value for u8 type by path.
- * @param node_path: node path.
- * @param name: property name.
- * @param value: property value.
- * @return 0 if success, or -1.
+ * @brief read int property by node path
+ * 
+ * @param node_path: node path
+ * @param name: property name
+ * @param value: property value
+ * @return int: 0: success, -1: fail
  */
-int fdt_read_prop_u8_by_path(const char *node_path, const char *name, uint8_t *value);
+int fdt_read_prop_int_index_by_path(const char *node_path, const char *name, uint8_t index, size_t *value);
 
 
 /**
- * @brief Read property value for u16 type by path.
- * @param node_path: node path.
- * @param name: property name.
- * @param value: property value.
- * @return 0 if success, or -1.
+ * @brief get int property size
+ * @param node: node
+ * @param name: property name
+ * @return int: property size, -1: fail
  */
-int fdt_read_prop_u16_by_path(const char *node_path, const char *name, uint16_t *value);
+int fdt_get_prop_int_size(fdt_node_t *node, const char *name);
 
 
 /**
- * @brief Read property value for u32 type by path.
- * @param node_path: node path.
- * @param name: property name.
- * @param value: property value.
- * @return 0 if success, or -1.
+ * @brief get int property size by path
+ * @param node_path: node path
+ * @param name: property name
+ * @return int: property size, -1: fail
  */
-int fdt_read_prop_u32_by_path(const char *node_path, const char *name, uint32_t *value);
+int fdt_get_prop_int_size_by_path(const char *node_path, const char *name);
 
 
 /**
- * @brief Read property value for u64 type by path.
- * @param node_path: node path.
- * @param name: property name.
- * @param value: property value.
- * @return 0 if success, or -1.
+ * @brief get property type
+ * @param node: node
+ * @param name: property name
+ * @return fdt_prop_type_t: property type, -1 if node not found
  */
-int fdt_read_prop_u64_by_path(const char *node_path, const char *name, uint64_t *value);
+fdt_prop_type_t fdt_get_prop_type(fdt_node_t *node, const char *name);
 
 
 /**
- * @brief Read property value for integer array type by path.
- * @param node_path: node path.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
+ * @brief get property type by node path
+ * @param node_path: node path
+ * @param name: property name
+ * @return fdt_prop_type_t: property type, -1 if node not found
  */
-int fdt_read_prop_array_by_path(const char *node_path, const char *name, uint8_t index, size_t *value);
-
-
-/**
- * @brief Read property value for u8 array type by path.
- * @param node_path: node path.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_array_u8_by_path(const char *node_path, const char *name, uint8_t index, uint8_t *value);
-
-
-/**
- * @brief Read property value for u16 array type by path.
- * @param node_path: node path.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_array_u16_by_path(const char *node_path, const char *name, uint8_t index, uint16_t *value);
-
-
-/**
- * @brief Read property value for u32 array type by path.
- * @param node_path: node path.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_array_u32_by_path(const char *node_path, const char *name, uint8_t index, uint32_t *value);
-
-
-/**
- * @brief Read property value for u64 array type by path.
- * @param node_path: node path.
- * @param name: property name.
- * @param index: array index.
- * @param value: property value.
- * @return 0 if success, or -1.
- */
-int fdt_read_prop_array_u64_by_path(const char *node_path, const char *name, uint8_t index, uint64_t *value);
+fdt_prop_type_t fdt_get_prop_type_by_path(const char *node_path, const char *name);
 
 
 /**

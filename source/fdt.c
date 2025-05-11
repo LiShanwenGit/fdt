@@ -40,8 +40,8 @@ static uint64_t fdt_consume = 0;
  */
 static inline void fdt_list_init(fdt_list_node_t *node) 
 {
-	node->next = node;
-	node->prev = node;
+    node->next = node;
+    node->prev = node;
 }
 
 
@@ -55,12 +55,12 @@ static inline void fdt_list_init(fdt_list_node_t *node)
  */
 static inline void fdt_list_add_node_at_tail(fdt_list_node_t *head, fdt_list_node_t *node)
 {
-	fdt_list_node_t *tail = head->prev;
+    fdt_list_node_t *tail = head->prev;
 
-	node->prev = tail;
-	node->next = head;
-	tail->next = node;
-	head->prev = node;
+    node->prev = tail;
+    node->next = head;
+    tail->next = node;
+    head->prev = node;
 }
 
 
@@ -74,12 +74,12 @@ static inline void fdt_list_add_node_at_tail(fdt_list_node_t *head, fdt_list_nod
  */
 static inline void fdt_list_add_node_at_front(fdt_list_node_t *head, fdt_list_node_t *node)
 {
-	fdt_list_node_t *front = head->next;
+    fdt_list_node_t *front = head->next;
 
-	node->prev = head;
-	node->next = front;
-	front->prev = node;
-	head->next = node;
+    node->prev = head;
+    node->next = front;
+    front->prev = node;
+    head->next = node;
 }
 
 
@@ -92,10 +92,10 @@ static inline void fdt_list_add_node_at_front(fdt_list_node_t *head, fdt_list_no
  */
 static inline void fdt_list_del_tail_node(fdt_list_node_t *head)
 {
-	fdt_list_node_t *tail_prev = head->prev->prev;
+    fdt_list_node_t *tail_prev = head->prev->prev;
 
-	tail_prev->next = head;
-	head->prev = tail_prev;
+    tail_prev->next = head;
+    head->prev = tail_prev;
 }
 
 
@@ -108,10 +108,10 @@ static inline void fdt_list_del_tail_node(fdt_list_node_t *head)
  */
 static inline void fdt_list_del_front_node(fdt_list_node_t *head)
 {
-	fdt_list_node_t *front_next = head->next->next;
+    fdt_list_node_t *front_next = head->next->next;
 
-	front_next->prev = head;
-	head->next = front_next;
+    front_next->prev = head;
+    head->next = front_next;
 }
 
 
@@ -124,8 +124,8 @@ static inline void fdt_list_del_front_node(fdt_list_node_t *head)
  */
 static inline void fdt_list_del_node(fdt_list_node_t *node)
 {
-	node->prev->next = node->next;
-	node->next->prev = node->prev;
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
 }
 
 
@@ -138,7 +138,7 @@ static inline void fdt_list_del_node(fdt_list_node_t *node)
  */
 static inline bool fdt_list_is_empty(fdt_list_node_t *head)
 {
-	return head->next == head;
+    return head->next == head;
 }
 
 
@@ -151,7 +151,7 @@ static inline bool fdt_list_is_empty(fdt_list_node_t *head)
  */
 static inline fdt_list_node_t* fdt_list_next_node(fdt_list_node_t *node)
 {
-	return node->next;
+    return node->next;
 }
 
 
@@ -164,7 +164,7 @@ static inline fdt_list_node_t* fdt_list_next_node(fdt_list_node_t *node)
  */
 static inline fdt_list_node_t* fdt_list_prev_node(fdt_list_node_t *node)
 {
-	return node->prev;
+    return node->prev;
 }
 
 
@@ -216,18 +216,6 @@ uint64_t fdt_get_version(void)
 
 
 /**
- * @brief check whether the node is root node
- * 
- * @param node: node
- * @return bool: true or false, root node return true
- */
-static bool fdt_node_is_root(fdt_node_t *node)
-{
-    return node->parent == &fdt_root;
-}
-
-
-/**
  * @brief check whether the node have child node
  * 
  * @param node: node
@@ -242,24 +230,78 @@ static bool fdt_node_have_child(fdt_node_t *node)
 /**
  * @brief find node by name
  * 
- * @param node: node, if the value is NULL, meaning find node from root node
+ * @param parent: node parent, it should not be NULL
  * @param name: node name
  * @return fdt_node_t*: node
  */
-fdt_node_t* fdt_find_node_by_name(fdt_node_t *node, const char *name)
+static fdt_node_t* find_node_by_name(fdt_node_t *parent, const char *name)
 {
     fdt_node_t *child = NULL;
-    if(node == NULL) {
-        node = &fdt_root;
+    if(parent == NULL) {
+        return NULL;
     }
 
-    fdt_list_for_each_entry(child, &node->child, fdt_node_t, entry) {
+    fdt_list_for_each_entry(child, &parent->child, fdt_node_t, entry) {
         if(child == NULL) {
             continue;
         }
 
         if(fdt_strcmp(child->name, name) == 0) {
             return child;
+        }
+    }
+
+    return NULL;
+}
+
+
+/**
+ * @brief recursion find node by name
+ * @param node: node
+ * @param name: node name
+ * @return fdt_node_t*: node, NULL: not find
+ */
+static inline fdt_node_t* __fdt_find_node_by_name(fdt_node_t *node, const char *name) 
+{
+    if(fdt_strcmp(node->name, name) == 0) {
+        return node;
+    }
+
+    if(fdt_node_have_child(node)) {
+        fdt_node_t *child = NULL;
+        fdt_list_for_each_entry(child, &node->child, fdt_node_t, entry) {
+            if(child == NULL) {
+                continue;
+            }
+
+            if(__fdt_find_node_by_name(child, name)) {
+                return child;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+
+/**
+ * @brief find node by name
+ * 
+ * @param parent: parent node, if the value is NULL, meaning find node from root node
+ * @param name: node name
+ * @return fdt_node_t*: node
+ */
+fdt_node_t* fdt_find_node_by_name(fdt_node_t *parent, const char *name)
+{
+    fdt_node_t *child = NULL;
+    if(parent == NULL) {
+        parent = &fdt_root;
+    }
+
+    fdt_list_for_each_entry(child, &parent->child, fdt_node_t, entry) {
+        fdt_node_t *find = __fdt_find_node_by_name(child, name);
+        if(find) {
+            return find;
         }
     }
 
@@ -288,7 +330,7 @@ fdt_node_t* fdt_find_node_by_path(const char *path)
         else if(*path == '/' && i > 0) {
             node_name[i] = 0; i = 0;
 
-            node = fdt_find_node_by_name(parent, node_name);
+            node = find_node_by_name(parent, node_name);
             if(node == NULL) {
                 return NULL;
             }
@@ -303,8 +345,8 @@ fdt_node_t* fdt_find_node_by_path(const char *path)
     }
 
     if(i) {
-        node_name[i+1] = 0;
-        return fdt_find_node_by_name(parent, node_name);
+        node_name[i] = 0;
+        return find_node_by_name(parent, node_name);
     }
 
     return node;
@@ -402,26 +444,35 @@ int fdt_read_prop_int(fdt_node_t *node, const char *name, size_t *value)
     }
 
     uint8_t *len = (uint8_t*)prop->offset;
+    uint8_t pos = *len;
     size_t  ret = 0;
 
-    for(int i = *len; i > 0; i--) {
-        ret = (ret << 8  | (*(len + i)));
+    if(pos > FDT_PROP_STRING && pos < FDT_PROP_ARRAY) {
+        for(int i = *len; i > 0; i--) {
+            ret = (ret << 8  | (*(len + i)));
+        }
+        *value = ret;
+        return 0;
+    }
+    else if(pos > FDT_PROP_ARRAY) {
+        *value = 0;
+        fdt_memcpy(value, len + 2, *len - 32);
+        return 0;
     }
 
-    *value = ret;
-    return 0;
+    return -1;
 }
 
 
 /**
- * @brief read u8 property
+ * @brief read int property
  * 
  * @param node: node
  * @param name: property name
  * @param value: property value
  * @return int: 0: success, -1: fail
  */
-int fdt_read_prop_u8(fdt_node_t *node, const char *name, uint8_t *value)
+int fdt_read_prop_int_index(fdt_node_t *node, const char *name, uint8_t index, size_t *value)
 {
     fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
     if(prop == NULL) {
@@ -429,269 +480,36 @@ int fdt_read_prop_u8(fdt_node_t *node, const char *name, uint8_t *value)
     }
 
     uint8_t *len = (uint8_t*)prop->offset;
+    uint8_t pos = *len;
+    size_t  ret = 0;
 
-    *value = *(len + 1);
-    return 0;
-}
+    if(pos > FDT_PROP_STRING && pos < FDT_PROP_ARRAY) {
+        if(index > 0) {
+            return -1;
+        }
 
+        for(int i = *len; i > 0; i--) {
+            ret = (ret << 8  | (*(len + i)));
+        }
+        *value = ret;
+        return 0;
+    }
+    else if(pos > FDT_PROP_ARRAY) {
+        uint8_t cell_size = *len - 32;
+        len ++;
+        uint8_t cell_max = *len;
 
-/**
- * @brief read u16 property
- * 
- * @param node: node
- * @param name: property name
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_u16(fdt_node_t *node, const char *name, uint16_t *value)
-{
-    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
-    if(prop == NULL) {
-        return -1;
+        if(index >= cell_max) {
+            return -1;
+        }
+
+        *value = 0;
+        uint8_t *offset = (len + index * cell_size + 1);
+        fdt_memcpy(value, offset, cell_size);
+        return 0;
     }
 
-    uint8_t *len = (uint8_t*)prop->offset;
-
-    *value = *(uint16_t*)(len + 1);
-    return 0;
-}
-
-
-/**
- * @brief read u32 property
- * 
- * @param node: node
- * @param name: property name
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_u32(fdt_node_t *node, const char *name, uint32_t *value)
-{
-    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
-    if(prop == NULL) {
-        return -1;
-    }
-
-    uint8_t *len = (uint8_t*)prop->offset;
-
-    *value = *(uint32_t*)(len + 1);
-    return 0;
-}
-
-
-/**
- * @brief read u64 property
- * 
- * @param node: node
- * @param name: property name
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_u64(fdt_node_t *node, const char *name, uint64_t *value)
-{
-    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
-    if(prop == NULL) {
-        return -1;
-    }
-
-    uint8_t *len = (uint8_t*)prop->offset;
-
-    *value = *(uint64_t*)(len + 1);
-    return 0;
-}
-
-
-/**
- * @brief read array property
- * 
- * @param node: node
- * @param name: property name
- * @param index: index
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_array(fdt_node_t *node, const char *name, uint8_t index, size_t *value)
-{
-    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
-    if(prop == NULL) {
-        return -1;
-    }
-
-    uint8_t *pos = (uint8_t*)prop->offset;
-    uint8_t cell_size = *pos - 32;
-    pos ++;
-    uint8_t len = *pos;
-
-    if(index >= len) {
-        return -1;
-    }
-
-    uint64_t ret = 0;
-    for(int j = cell_size; j > 0; j--) {
-        ret = (ret << 8  | (*(pos + j + index * cell_size)));
-    }
-
-    *value = ret;
-    return 0;
-}
-
-
-/**
- * @brief read array property size
- * 
- * @param node: node
- * @param name: property name
- * @return int: > 0: success, -1: fail
- */
-int fdt_read_prop_array_size(fdt_node_t *node, const char *name)
-{
-    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
-    if(prop == NULL) {
-        return -1;
-    }
-
-    uint8_t *pos = (uint8_t*)prop->offset;
-    uint8_t cell_size = *pos - 32;
-
-    return *(pos + 1);
-}
-
-
-/**
- * @brief read array property size by path
- * 
- * @param node_path: node path
- * @param name: property name
- * @return int: > 0: success, -1: fail
- */
-int fdt_read_prop_array_size_by_path(const char *node_path, const char *name)
-{
-    fdt_node_t* node = fdt_find_node_by_path(node_path);
-    if(node == NULL) {
-        return -1;
-    }
-
-    return fdt_read_prop_array_size(node, name);
-}
-
-
-/**
- * @brief read array property for u8 type
- * 
- * @param node: node
- * @param name: property name
- * @param index: index
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_array_u8(fdt_node_t *node, const char *name, uint8_t index, uint8_t *value)
-{
-    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
-    if(prop == NULL) {
-        return -1;
-    }
-
-    uint8_t *pos = (uint8_t*)prop->offset;
-    uint8_t cell_size = *pos - 32;
-    pos ++;
-    uint8_t len = *pos;
-
-    if(index >= len) {
-        return -1;
-    }
-
-    *value = * ((uint8_t*)(pos + index * cell_size + 1));
-    return 0;
-}
-
-
-/**
- * @brief read array property for u16 type
- * 
- * @param node: node
- * @param name: property name
- * @param index: index
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_array_u16(fdt_node_t *node, const char *name, uint8_t index, uint16_t *value)
-{
-    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
-    if(prop == NULL) {
-        return -1;
-    }
-
-    uint8_t *pos = (uint8_t*)prop->offset;
-    uint8_t cell_size = *pos - 32;
-    pos ++;
-    uint8_t len = *pos;
-
-    if(index >= len) {
-        return -1;
-    }
-
-    *value = * ((uint16_t*)(pos + index * cell_size + 1));
-    return 0;
-}
-
-
-/**
- * @brief read array property for u32 type
- * 
- * @param node: node
- * @param name: property name
- * @param index: index
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_array_u32(fdt_node_t *node, const char *name, uint8_t index, uint32_t *value)
-{
-    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
-    if(prop == NULL) {
-        return -1;
-    }
-
-    uint8_t *pos = (uint8_t*)prop->offset;
-    uint8_t cell_size = *pos - 32;
-    pos ++;
-    uint8_t len = *pos;
-
-    if(index >= len) {
-        return -1;
-    }
-
-    *value = * ((uint32_t*)(pos + index * cell_size + 1));
-    return 0;
-}
-
-
-/**
- * @brief read array property for u64 type
- * 
- * @param node: node
- * @param name: property name
- * @param index: index
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_array_u64(fdt_node_t *node, const char *name, uint8_t index, uint64_t *value)
-{
-    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
-    if(prop == NULL) {
-        return -1;
-    }
-
-    uint8_t *pos = (uint8_t*)prop->offset;
-    uint8_t cell_size = *pos - 32;
-    pos ++;
-    uint8_t len = *pos;
-
-    if(index >= len) {
-        return -1;
-    }
-
-    *value = * ((uint64_t*)(pos + index * cell_size + 1));
-    return 0;
+    return -1;
 }
 
 
@@ -733,158 +551,111 @@ int fdt_read_prop_int_by_path(const char *node_path, const char *name, size_t *v
 
 
 /**
- * @brief read u8 property by node path
+ * @brief read int property by node path
  * 
  * @param node_path: node path
  * @param name: property name
  * @param value: property value
  * @return int: 0: success, -1: fail
  */
-int fdt_read_prop_u8_by_path(const char *node_path, const char *name, uint8_t *value)
+int fdt_read_prop_int_index_by_path(const char *node_path, const char *name, uint8_t index, size_t *value)
 {
     fdt_node_t* node = fdt_find_node_by_path(node_path);
     if(node == NULL) {
         return -1;
     }
 
-    return fdt_read_prop_u8(node, name, value);
+    return fdt_read_prop_int_index(node, name, index, value);
 }
 
 
 /**
- * @brief read u16 property by node path
- * 
- * @param node_path: node path
+ * @brief get int property size
+ * @param node: node
  * @param name: property name
- * @param value: property value
- * @return int: 0: success, -1: fail
+ * @return int: property size, -1: fail
  */
-int fdt_read_prop_u16_by_path(const char *node_path, const char *name, uint16_t *value)
+int fdt_get_prop_int_size(fdt_node_t *node, const char *name)
 {
-    fdt_node_t* node = fdt_find_node_by_path(node_path);
-    if(node == NULL) {
+    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
+    if(prop == NULL) {
         return -1;
     }
 
-    return fdt_read_prop_u16(node, name, value);
+    uint8_t *pos = (uint8_t*)prop->offset;
+    if(*pos > FDT_PROP_STRING && *pos < FDT_PROP_ARRAY) {
+        return 1;
+    }
+    else if(*pos > FDT_PROP_ARRAY) {
+        return *(pos + 1);
+    }
+
+    return -1;
 }
 
 
 /**
- * @brief read u32 property by node path
- * 
+ * @brief get int property size by path
  * @param node_path: node path
  * @param name: property name
- * @param value: property value
- * @return int: 0: success, -1: fail
+ * @return int: property size, -1: fail
  */
-int fdt_read_prop_u32_by_path(const char *node_path, const char *name, uint32_t *value)
+int fdt_get_prop_int_size_by_path(const char *node_path, const char *name)
 {
     fdt_node_t* node = fdt_find_node_by_path(node_path);
     if(node == NULL) {
         return -1;
     }
 
-    return fdt_read_prop_u32(node, name, value);
+    return fdt_get_prop_int_size(node, name);
 }
 
 
 /**
- * @brief read u64 property by node path
- * 
- * @param node_path: node path
+ * @brief get property type
+ * @param node: node
  * @param name: property name
- * @param value: property value
- * @return int: 0: success, -1: fail
+ * @return fdt_prop_type_t: property type, -1 if node not found
  */
-int fdt_read_prop_u64_by_path(const char *node_path, const char *name, uint64_t *value)
+fdt_prop_type_t fdt_get_prop_type(fdt_node_t *node, const char *name)
 {
-    fdt_node_t* node = fdt_find_node_by_path(node_path);
-    if(node == NULL) {
+    fdt_prop_type_t type = FDT_PROP_INVALID;
+
+    fdt_prop_t *prop = fdt_find_prop_by_name(node, name);
+    if(prop == NULL) {
         return -1;
     }
 
-    return fdt_read_prop_u64(node, name, value);
+    uint8_t pos = *(uint8_t*)(prop->offset);
+
+    if(pos == FDT_PROP_STRING) {
+        type = FDT_PROP_STRING;
+    }
+    else if(pos > FDT_PROP_STRING && pos < FDT_PROP_ARRAY) {
+        type = FDT_PROP_INT;
+    }
+    else if(pos > FDT_PROP_ARRAY) {
+        type = FDT_PROP_ARRAY;
+    }
+
+    return type;
 }
 
 
 /**
- * @brief read array property for u8 type
- * 
+ * @brief get property type by node path
  * @param node_path: node path
  * @param name: property name
- * @param index: index
- * @param value: property value
- * @return int: 0: success, -1: fail
+ * @return fdt_prop_type_t: property type, -1 if node not found
  */
-int fdt_read_prop_array_u8_by_path(const char *node_path, const char *name, uint8_t index, uint8_t *value)
+fdt_prop_type_t fdt_get_prop_type_by_path(const char *node_path, const char *name)
 {
     fdt_node_t* node = fdt_find_node_by_path(node_path);
     if(node == NULL) {
         return -1;
     }
 
-    return fdt_read_prop_array_u8(node, name, index, value);
-}
-
-
-/**
- * @brief read array property for u16 type
- * 
- * @param node_path: node path
- * @param name: property name
- * @param index: index
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_array_u16_by_path(const char *node_path, const char *name, uint8_t index, uint16_t *value)
-{
-    fdt_node_t* node = fdt_find_node_by_path(node_path);
-    if(node == NULL) {
-        return -1;
-    }
-
-    return fdt_read_prop_array_u16(node, name, index, value);
-}
-
-
-/**
- * @brief read array property for u32 type
- * 
- * @param node_path: node path
- * @param name: property name
- * @param index: index
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_array_u32_by_path(const char *node_path, const char *name, uint8_t index, uint32_t *value)
-{
-    fdt_node_t* node = fdt_find_node_by_path(node_path);
-    if(node == NULL) {
-        return -1;
-    }
-
-    return fdt_read_prop_array_u32(node, name, index, value);
-}
-
-
-/**
- * @brief read array property for u64 type
- * 
- * @param node_path: node path
- * @param name: property name
- * @param index: index
- * @param value: property value
- * @return int: 0: success, -1: fail
- */
-int fdt_read_prop_array_u64_by_path(const char *node_path, const char *name, uint8_t index, uint64_t *value)
-{
-    fdt_node_t* node = fdt_find_node_by_path(node_path);
-    if(node == NULL) {
-        return -1;
-    }
-
-    return fdt_read_prop_array_u64(node, name, index, value);
+    return fdt_get_prop_type(node, name);
 }
 
 
@@ -998,7 +769,7 @@ static void fdt_debug_put_node_prop(fdt_node_t *node, int level)
                 value = (value << 8  | (*(type + i)));
             }
 
-            FDT_LOG("0x%lx\n", value);
+            FDT_LOG("0x%"PRIx64"\n", value);
         }
         else if(*type > FDT_PROP_ARRAY) {
             uint8_t cell_size = *type - 32;
@@ -1010,7 +781,7 @@ static void fdt_debug_put_node_prop(fdt_node_t *node, int level)
                 for(int j = cell_size; j > 0; j--) {
                     value = (value << 8  | (*(type + j + i * cell_size)));
                 }
-                FDT_LOG("0x%lx ", value);
+                FDT_LOG("0x%"PRIx64" ", value);
             }
             FDT_LOG("\n");
         }

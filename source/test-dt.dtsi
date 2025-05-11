@@ -1,6 +1,3 @@
-//
-//
-//
 led:
     pin: 34
     status: "low"

@@ -1,0 +1,34 @@
+node1:
+    string: "test_string"
+    int: 95
+    int8: 50
+    int16: 0xf550
+    int32: 0x1050de10
+    int64: 0x1050de40de20de0
+    array: [0x45 0x787de 4581]
+    array8:  [10 15 20 25]
+    array16: [0x1050 0x20de 0x3045 0x4020]
+    array32: [0x1050de20 0x20de40de 0x3045de70 0x4020de80]
+    array64: [0x1050de4020de4020 0x20de40de6045de10 0x3045de70dcadcd10 0x4020de80adcddede]
+    
+    subnode1:
+        string: "test_string2"
+        int: 100
+        array8:  [10 15 20 25 30 35 40 45 50 55]
+
+node2:
+    string: "test_string"
+    int: 95
+    int8: 50
+    int16: 0xf550
+    int32: 0x1050de10
+    int64: 0x1050de40de20de0
+    array8:  [10 15 20 25]
+    array16: [0x1050 0x20de 0x3045 0x4020]
+    array32: [0x1050de20 0x20de40de 0x3045de70 0x4020de80]
+    array64: [0x1050de4020de40 0x20de40de6045de 0x3045de70dcadcd 0x4020de80adcdde]
+    
+    subnode2:
+        string: "test_string2"
+        int: 100
+        array8:  [10 15 20 25 30 35 40 45 50 55]
